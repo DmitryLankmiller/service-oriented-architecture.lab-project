@@ -1,0 +1,584 @@
+openapi: 3.1.1
+info:
+  title: Flat API
+  description: Управление коллекцией квартир
+  version: 1.0.0
+servers:
+  - url: https://api.server.test
+paths:
+  /flats:
+    get:
+      summary: Получить список квартир
+      description: >-
+        Возвращает страницу квартир. Для фильтрации используется filter, условия
+        соединяются логическим И. Для сортировки используются поля sort слева направо.
+      operationId: listFlats
+      tags: [Flats]
+      parameters:
+        - $ref: '#/components/parameters/FlatFilter'
+        - $ref: '#/components/parameters/FlatSort'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Список квартир.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Flats'
+              example: '<flats><flat><id>1</id><name>Квартира</name><coordinates><x>0</x><y>0</y></coordinates><creationDate>2025-05-25</creationDate><area>50</area><numberOfRooms>2</numberOfRooms></flat></flats>'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      summary: Добавить квартиру
+      description: Создаёт квартиру. Идентификатор и дата создания генерируются автоматически.
+      operationId: createFlat
+      tags: [Flats]
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/FlatInput'
+      responses:
+        '201':
+          description: Квартира создана.
+          headers:
+            Location:
+              description: URI созданной квартиры.
+              schema:
+                type: string
+                format: uri
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Flat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+
+  /flats/deletions/by-number-of-rooms:
+    post:
+      summary: Удалить одну квартиру с заданным числом комнат
+      description: >-
+        Удаляет один (любой) объект, значение поля numberOfRooms которого эквивалентно заданному.
+      operationId: deleteOneFlatByNumberOfRooms
+      tags: [Flats]
+      parameters:
+        - name: numberOfRooms
+          in: query
+          required: true
+          description: Число комнат удаляемой квартиры.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 20
+      responses:
+        '200':
+          description: Квартира удалена; в ответе возвращается удалённая квартира.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Flat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/NothingToDelete'
+
+  /flats/count-by-house:
+    get:
+      summary: Количество квартир с заданным домом
+      description: >-
+        Вернуть количество объектов, значение поля house которых равно заданному.
+      operationId: countFlatsByHouse
+      tags: [Flats]
+      parameters:
+        - name: house
+          in: query
+          required: false
+          description: Значение null для подсчёта квартир без дома.
+          schema:
+            type: string
+            enum: ['null']
+        - name: house.name
+          in: query
+          required: false
+          description: Имя дома. Если не указать, то имя равно null.
+          schema:
+            type: string
+        - name: house.year
+          in: query
+          required: false
+          description: Год дома. Не может быть null
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 148
+        - name: house.numberOfFlatsOnFloor
+          in: query
+          required: false
+          description: Количество квартир на этаже дома. Не может быть null
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: Количество квартир с указанным домом.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CountResponse'
+              example: '<countResult><count>3</count></countResult>'
+        '400':
+          $ref: '#/components/responses/InvalidHouse'
+
+  /flats/view-greater-than/{view}:
+    get:
+      summary: Получить квартиры с видом больше заданного
+      description: >-
+        Вернуть массив объектов, значение поля view которых больше заданного.
+      operationId: getFlatsWithGreaterView
+      tags: [Flats]
+      parameters:
+        - name: view
+          in: path
+          required: true
+          description: Значение view для сравнения.
+          schema:
+            $ref: '#/components/schemas/View'
+      responses:
+        '200':
+          description: Квартиры с большим значением view, включая пустой список.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Flats'
+              example: '<flats><flat><id>1</id><name>Квартира</name><coordinates><x>0</x><y>0</y></coordinates><creationDate>2025-05-25</creationDate><area>50</area><numberOfRooms>2</numberOfRooms><view>NORMAL</view></flat></flats>'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /flats/{id}:
+    parameters:
+      - $ref: '#/components/parameters/FlatId'
+    get:
+      summary: Получить квартиру по id
+      description: Возвращает квартиру с указанным идентификатором.
+      operationId: getFlat
+      tags: [Flats]
+      responses:
+        '200':
+          description: Квартира с заданным id.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Flat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Обновить квартиру по id
+      description: >-
+        Обязательные поля передаются целиком. Отсутствующие необязательные поля
+        получают значение null. id из URL и дата создания сохраняются.
+      operationId: replaceFlat
+      tags: [Flats]
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/FlatInput'
+      responses:
+        '200':
+          description: Квартира обновлена.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Flat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+    patch:
+      summary: Изменить одно поле квартиры по id
+      description: >-
+        Изменяет ровно одно поле квартиры, включая поле вложенного объекта.
+        id и creationDate изменять нельзя. Если house отсутствует, его поля
+        нельзя изменить отдельно; для создания house используется PUT.
+        Очистка необязательных полей выполняется через PUT.
+      operationId: patchFlat
+      tags: [Flats]
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/FlatPatch'
+            example: '<flat><house><year>100</year></house></flat>'
+      responses:
+        '200':
+          description: Квартира обновлена.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Flat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/MissingParentObject'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+    delete:
+      summary: Удалить квартиру по id
+      description: Удаляет квартиру с указанным идентификатором.
+      operationId: deleteFlat
+      tags: [Flats]
+      responses:
+        '204':
+          description: Квартира удалена.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/NothingToDelete'
+
+components:
+  responses:
+    BadRequest:
+      description: Некорректное переданное значение. Например, ожидали integer, передали string.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: '<error><status>400</status><code>BAD_REQUEST</code><message>Invalid request</message><timestamp>2025-05-25T15:00:00Z</timestamp></error>'
+    InvalidHouse:
+      description: Параметры дома некорректны или выходят за допустимые границы.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: '<error><status>400</status><code>INVALID_HOUSE</code><message>house.year must be between 1 and 148</message><field>house.year</field><timestamp>2026-09-25T12:00:00Z</timestamp></error>'
+    NotFound:
+      description: Запрошенная квартира или подходящий объект не найдены.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: '<error><status>404</status><code>FLAT_NOT_FOUND</code><message>Flat not found</message><timestamp>2026-09-25T12:00:00Z</timestamp></error>'
+    NothingToDelete:
+      description: Подходящей квартиры для удаления нет.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: '<error><status>409</status><code>NOTHING_TO_DELETE</code><message>No flat to delete</message><timestamp>2026-09-25T12:00:00Z</timestamp></error>'
+    MissingParentObject:
+      description: Вложенный объект для изменения отсутствует.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: '<error><status>409</status><code>MISSING_PARENT_OBJECT</code><message>House is absent</message><field>house</field><timestamp>2026-09-25T12:00:00Z</timestamp></error>'
+    UnsupportedMediaType:
+      description: Тело запроса должно иметь тип application/xml.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: '<error><status>415</status><code>UNSUPPORTED_MEDIA_TYPE</code><message>Expected application/xml</message><timestamp>2026-09-25T12:00:00Z</timestamp></error>'
+    UnprocessableContent:
+      description: Переданное значение нарушает ограничения целостности.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example: '<error><status>422</status><code>VALIDATION_ERROR</code><message>area must be at most 724</message><field>area</field><timestamp>2026-09-25T12:00:00Z</timestamp></error>'
+  parameters:
+    FlatFilter:
+      name: filter
+      in: query
+      required: false
+      style: form
+      explode: true
+      description: >-
+        filter=area_ge_50&filter=house.year_lt_100 задаёт фильтр "area >= 50 and house.year < 100"
+        Операторы фильтрации: eq, neq, gt, ge, lt, le, contains, ncontains.
+        Для необязательных полей eq_null выбирает объекты с отсутствующим значением.
+      schema:
+        type: array
+        minItems: 1
+        items:
+          type: string
+      example: [area_ge_50, house.year_lt_100]
+    FlatSort:
+      name: sort
+      in: query
+      required: false
+      style: form
+      explode: false
+      description: >-
+        Список полей через запятую в порядке приоритета,
+        каждое в формате поле_asc или поле_desc.
+      schema:
+        type: array
+        minItems: 1
+        items:
+          type: string
+      example: [area_desc, name_asc]
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Номер страницы, начиная с 0.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Максимальное количество квартир на странице.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 10
+    FlatId:
+      name: id
+      in: path
+      required: true
+      description: Идентификатор квартиры.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+
+  schemas:
+    Error:
+      type: object
+      description: Единый формат ошибок для обоих сервисов.
+      required: [status, code, message, timestamp]
+      properties:
+        status:
+          type: integer
+          minimum: 400
+          maximum: 499
+          description: HTTP-код ответа.
+        code:
+          type: string
+          description: Код ошибки для программной обработки.
+        message:
+          type: string
+          description: Человекочитаемое описание ошибки.
+        field:
+          type: string
+          description: Имя поля, вызвавшего ошибку, если применимо.
+        timestamp:
+          type: string
+          format: date-time
+          description: Время возникновения ошибки.
+
+    CountResponse:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+          format: int64
+          minimum: 0
+
+    Flats:
+      type: array
+      items:
+        $ref: '#/components/schemas/Flat'
+
+    Flat:
+      type: object
+      description: Объект квартиры.
+      required:
+        - id
+        - name
+        - coordinates
+        - creationDate
+        - area
+        - numberOfRooms
+      properties:
+        id:
+          type: integer
+          format: int32
+          minimum: 1
+          readOnly: true
+          description: Уникальный идентификатор, назначаемый сервисом.
+        name:
+          type: string
+          minLength: 1
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        creationDate:
+          type: string
+          format: date
+          readOnly: true
+          description: Дата создания, назначаемая сервисом.
+        area:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 724
+        numberOfRooms:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 20
+        furnish:
+          $ref: '#/components/schemas/Furnish'
+        view:
+          $ref: '#/components/schemas/View'
+        transport:
+          $ref: '#/components/schemas/Transport'
+        house:
+          $ref: '#/components/schemas/House'
+    FlatInput:
+      type: object
+      description: >-
+        XML для создания или полной замены квартиры. id и дата создания не передаются.
+        Отсутствующие необязательные поля имеют значение null.
+      required: [name, coordinates, area, numberOfRooms]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        area:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 724
+        numberOfRooms:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 20
+        furnish:
+          $ref: '#/components/schemas/Furnish'
+        view:
+          $ref: '#/components/schemas/View'
+        transport:
+          $ref: '#/components/schemas/Transport'
+        house:
+          $ref: '#/components/schemas/House'
+    FlatPatch:
+      type: object
+      minProperties: 1
+      maxProperties: 1
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+        coordinates:
+          $ref: '#/components/schemas/CoordinatesPatch'
+        area:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 724
+        numberOfRooms:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 20
+        furnish:
+          $ref: '#/components/schemas/Furnish'
+        view:
+          $ref: '#/components/schemas/View'
+        transport:
+          $ref: '#/components/schemas/Transport'
+        house:
+          $ref: '#/components/schemas/HousePatch'
+    CoordinatesPatch:
+      type: object
+      minProperties: 1
+      maxProperties: 1
+      additionalProperties: false
+      properties:
+        x:
+          type: integer
+          format: int32
+          exclusiveMinimum: -288
+        y:
+          type: integer
+          format: int32
+    HousePatch:
+      type: object
+      minProperties: 1
+      maxProperties: 1
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        year:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 148
+        numberOfFlatsOnFloor:
+          type: integer
+          format: int32
+          minimum: 1
+    Coordinates:
+      type: object
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: integer
+          format: int32
+          exclusiveMinimum: -288
+        y:
+          type: integer
+          format: int32
+    House:
+      type: object
+      required:
+        - year
+        - numberOfFlatsOnFloor
+      properties:
+        name:
+          type: string
+        year:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 148
+        numberOfFlatsOnFloor:
+          type: integer
+          format: int32
+          minimum: 1
+    Furnish:
+      type: string
+      enum: [DESIGNER, NONE, FINE, BAD, LITTLE]
+    View:
+      type: string
+      enum: [STREET, PARK, NORMAL]
+    Transport:
+      type: string
+      enum: [FEW, LITTLE, NORMAL, ENOUGH]

@@ -1,0 +1,1 @@
+scp -r ../docs/openapi helios:~/public_html/soa

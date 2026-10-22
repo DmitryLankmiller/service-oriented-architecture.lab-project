@@ -3,6 +3,7 @@ plugins {
 	id 'war'
 	id 'org.springframework.boot' version '4.1.1'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.openapi.generator' version '7.26.0'
 }
 
 group = 'ru.ifmo.se'
@@ -18,10 +19,46 @@ repositories {
 	mavenCentral()
 }
 
+openApiGenerate {
+    generatorName.set('spring')
+    inputSpec.set(file('../docs/openapi/flat-service.yml').absolutePath)
+    outputDir.set(
+        layout.buildDirectory.dir('generated/openapi').get().asFile.absolutePath
+    )
+
+    configOptions.set([
+        interfaceOnly: 'true',
+		skipDefaultInterface: 'true',
+        useSpringBoot4: 'true',
+        useJackson3: 'true',
+        withXml: 'true',
+        useTags: 'true'
+    ])
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('openApiGenerate')
+}
+
 dependencies {
 	// implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'io.swagger.core.v3:swagger-annotations-jakarta:2.2.22'
+	implementation 'tools.jackson.dataformat:jackson-dataformat-xml'
+	implementation 'jakarta.xml.bind:jakarta.xml.bind-api'
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.12'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir layout.buildDirectory.dir(
+                'generated/openapi/src/main/java'
+            )
+        }
+    }
 }

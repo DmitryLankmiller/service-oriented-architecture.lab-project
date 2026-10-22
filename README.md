@@ -61,3 +61,10 @@ gradle build
 ```sh
 java -jar $JETTY_HOME/start.jar jetty.ssl.port=8444
 ```
+
+Генерация из OpenAPI спецификации для Spring:
+
+```sh
+cd flat-service
+./gradlew openApiGenerat
+```

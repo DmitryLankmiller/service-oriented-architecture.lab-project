@@ -15,6 +15,22 @@ TODO: добавить описание проекта
 java -jar $JETTY_HOME/start.jar
 ```
 
+Перед запуском необходимо убедиться, что заданы переменные окружения для подключения к БД:
+
+```conf
+DB_URL='jdbc:postgresql://{HOST_NAME}:5432/{DB_NAME}'
+DB_USERNAME='{USERNAME}'
+DB_PASSWORD='{PASSWORD}'
+```
+
+Если они лежат в той же runtime-директории в файле `.env`, их можно применить следующим образом:
+
+```sh
+set -a
+source .env
+set +a
+```
+
 ## Подключение `ssl` к `flat-service`
 
 Для создания `HTTPS`-соединения необходимо создать пару ключей с помощью скрипта [gen_keys.sh](./scripts/gen_keys.sh), после чего экспортировать сертификат с помощью скрипта [export_cert.sh](./scripts/export_cert.sh).
@@ -27,7 +43,7 @@ java -jar $JETTY_HOME/start.jar --add-modules=https,ssl
 
 После исполнения команды в файле `$JETTY_BASE/start.d/ssl-context.ini` необходимо изменить параметры:
 
-```txt
+```conf
 jetty.sslContext.keyStorePath=etc/keystore.p12
 jetty.sslContext.keyStorePassword=keystore_password
 ```

@@ -34,7 +34,7 @@ public class FlatsController implements FlatsApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteFlat(@Min(1) Integer id) {
+    public ResponseEntity<Void> deleteFlat(@Min(1) Long id) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'deleteFlat'");
     }
@@ -46,7 +46,7 @@ public class FlatsController implements FlatsApi {
     }
 
     @Override
-    public ResponseEntity<Flat> getFlat(@Min(1) Integer id) {
+    public ResponseEntity<Flat> getFlat(@Min(1) Long id) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getFlat'");
     }
@@ -65,13 +65,13 @@ public class FlatsController implements FlatsApi {
     }
 
     @Override
-    public ResponseEntity<Flat> patchFlat(@Min(1) Integer id, @Valid FlatPatch flatPatch) {
+    public ResponseEntity<Flat> patchFlat(@Min(1) Long id, @Valid FlatPatch flatPatch) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'patchFlat'");
     }
 
     @Override
-    public ResponseEntity<Flat> replaceFlat(@Min(1) Integer id, @Valid FlatInput flatInput) {
+    public ResponseEntity<Flat> replaceFlat(@Min(1) Long id, @Valid FlatInput flatInput) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'replaceFlat'");
     }

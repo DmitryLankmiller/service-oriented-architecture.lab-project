@@ -366,7 +366,7 @@ components:
       description: Идентификатор квартиры.
       schema:
         type: integer
-        format: int32
+        format: int64
         minimum: 1
 
   schemas:
@@ -421,7 +421,7 @@ components:
       properties:
         id:
           type: integer
-          format: int32
+          format: int64
           minimum: 1
           readOnly: true
           description: Уникальный идентификатор, назначаемый сервисом.
@@ -520,8 +520,8 @@ components:
       additionalProperties: false
       properties:
         x:
-          type: integer
-          format: int32
+          type: number
+          format: float
           exclusiveMinimum: -288
         y:
           type: integer
@@ -550,8 +550,8 @@ components:
         - y
       properties:
         x:
-          type: integer
-          format: int32
+          type: number
+          format: float
           exclusiveMinimum: -288
         y:
           type: integer

@@ -1,7 +1,7 @@
 <?php
 
 $publicPrefix = '/~s373305/soa/api/';
-$upstream = 'http://127.0.0.1:8080/flat-service/';
+$upstream = 'https://localhost:8444/flat-service/';
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
@@ -54,6 +54,11 @@ $context = stream_context_create([
         'ignore_errors' => true,
         'follow_location' => 0,
     ],
+    'ssl' => [
+        'cafile' => '/home/studs/s373305/SOA/flat-service.crt',
+        'verify_peer' => true,
+        'verify_peer_name' => true,
+    ]
 ]);
 
 $responseBody = @file_get_contents($url, false, $context);

@@ -15,6 +15,34 @@ TODO: добавить описание проекта
 java -jar $JETTY_HOME/start.jar
 ```
 
+## Подключение `ssl` к `flat-service`
+
+Для создания `HTTPS`-соединения необходимо создать пару ключей с помощью скрипта [gen_keys.sh](./scripts/gen_keys.sh), после чего экспортировать сертификат с помощью скрипта [export_cert.sh](./scripts/export_cert.sh).
+
+В результате генерации пары ключей будет создано keystore-хранилище с расширением `.p12`, его необходимо разместить в директории `$JETTY_BASE/etc`. Далее необходимо подключить модули для `https` и `ssl` с помощью следующей команды:
+
+```sh
+java -jar $JETTY_HOME/start.jar --add-modules=https,ssl
+```
+
+После исполнения команды в файле `$JETTY_BASE/start.d/ssl-context.ini` необходимо изменить параметры:
+
+```txt
+jetty.sslContext.keyStorePath=etc/keystore.p12
+jetty.sslContext.keyStorePassword=keystore_password
+```
+
+После этого в Jetty будет доступно подключение по https.
+
+Чтобы отключить возможность подключения по http как вариант можно переименовать файл `$JETTY_BASE/start.d/http.ini`:
+
+```sh
+cd $JETTY_BASE/start.d
+mv http.ini http.ini.disabled
+```
+
+Для клиента необходимо при последующих запросах начать использовать сгенерированный сертификат, чтобы подключение прошло успешно.
+
 ## Полезные команды
 
 Сборка `flat-service` в `war`:
@@ -31,5 +59,5 @@ gradle build
 Запуск Jetty сервера:
 
 ```sh
-java -jar $JETTY_HOME/start.jar jetty.http.host=127.0.0.0 jetty.http.port=8080
+java -jar $JETTY_HOME/start.jar jetty.ssl.port=8444
 ```

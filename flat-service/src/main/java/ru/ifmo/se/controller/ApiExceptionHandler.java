@@ -14,15 +14,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.ifmo.se.exception.FlatNotFoundException;
 import ru.ifmo.se.exception.MissingHouseException;
 import ru.ifmo.se.exception.InvalidQueryException;
+import ru.ifmo.se.exception.InvalidHouseException;
+import ru.ifmo.se.exception.NothingToDeleteException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(NothingToDeleteException.class)
+    public ResponseEntity<ErrorDto> nothingToDelete(NothingToDeleteException exception) {
+        return error(HttpStatus.CONFLICT, "NOTHING_TO_DELETE", exception.getMessage(), "numberOfRooms");
+    }
+
+    @ExceptionHandler(InvalidHouseException.class)
+    public ResponseEntity<ErrorDto> invalidHouse(InvalidHouseException exception) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_HOUSE", exception.getMessage(), exception.getField());
+    }
+
     @ExceptionHandler(InvalidQueryException.class)
     public ResponseEntity<ErrorDto> invalidQuery(InvalidQueryException exception) {
         return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", exception.getMessage(), exception.getField());
@@ -88,6 +101,12 @@ public class ApiExceptionHandler {
                 "BAD_REQUEST",
                 "Некорректный тип параметра",
                 exception.getName());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorDto> missingParameter(MissingServletRequestParameterException exception) {
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Отсутствует обязательный параметр",
+                exception.getParameterName());
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)

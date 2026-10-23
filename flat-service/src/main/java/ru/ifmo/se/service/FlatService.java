@@ -1,22 +1,30 @@
 package ru.ifmo.se.service;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.openapitools.model.CountResponseDto;
 import org.openapitools.model.FlatDto;
 import org.openapitools.model.FlatInputDto;
 import org.openapitools.model.FlatPatchDto;
+import org.openapitools.model.ViewDto;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.ifmo.se.exception.FlatNotFoundException;
+import ru.ifmo.se.exception.InvalidHouseException;
 import ru.ifmo.se.exception.InvalidQueryException;
 import ru.ifmo.se.exception.MissingHouseException;
+import ru.ifmo.se.exception.NothingToDeleteException;
 import ru.ifmo.se.mapper.FlatMapper;
 import ru.ifmo.se.model.Coordinates;
 import ru.ifmo.se.model.Flat;
@@ -69,21 +77,65 @@ public class FlatService {
             throw new InvalidQueryException("page", "Смещение страницы слишком большое");
         }
         var specification = flatFilterBuilder.build(filters).and(flatSortBuilder.build(sorting));
-        // Порядок задаёт Criteria API: enum сортируются через CASE по порядку объявления.
+
         return flatRepository.findAll(specification, PageRequest.of(pageNumber, pageSize))
                 .getContent().stream().map(flatMapper::toDto).toList();
     }
 
     @Transactional
     public void deleteFlatById(@NotNull @Positive Long id) {
-        Flat flat = findFlat(id);
-        Coordinates coordinates = flat.getCoordinates();
-        House house = flat.getHouse();
+        deleteFlat(findFlat(id));
+    }
 
-        flatRepository.delete(flat);
-        flatRepository.flush();
-        coordinatesService.deleteCoordinates(coordinates);
-        deleteHouseIfUnused(house);
+    @Transactional
+    public FlatDto deleteOneFlatByNumberOfRooms(@NotNull @Min(1) @Max(20) Integer numberOfRooms) {
+        Flat flat = flatRepository.findFirstByNumberOfRoomsOrderByIdAsc(numberOfRooms)
+                .orElseThrow(() -> new NothingToDeleteException(numberOfRooms));
+        FlatDto deletedFlat = flatMapper.toDto(flat);
+
+        deleteFlat(flat);
+
+        return deletedFlat;
+    }
+
+    public CountResponseDto countFlatsByHouse(
+            String house,
+            String houseName,
+            @Min(1) @Max(148) Long houseYear,
+            @Min(1) Integer houseNumberOfFlatsOnFloor) {
+        if (house != null) {
+            if (!house.equals("null")) {
+                throw new InvalidHouseException("house", "Параметр house допускает только значение null");
+            }
+            if (houseName != null || houseYear != null || houseNumberOfFlatsOnFloor != null) {
+                throw new InvalidHouseException("house", "Параметр house=null несовместим с полями дома");
+            }
+            return new CountResponseDto(flatRepository.countByHouseIsNull());
+        }
+
+        if (houseYear == null) {
+            throw new InvalidHouseException("house.year", "Укажите house.year или house=null");
+        }
+
+        if (houseNumberOfFlatsOnFloor == null) {
+            throw new InvalidHouseException("house.numberOfFlatsOnFloor", "Укажите house.numberOfFlatsOnFloor");
+        }
+
+        long count = flatRepository.countByHouse_NameAndHouse_YearAndHouse_NumberOfFlatsOnFloor(
+                houseName, houseYear, houseNumberOfFlatsOnFloor);
+
+        return new CountResponseDto(count);
+    }
+
+    public List<FlatDto> getFlatsWithGreaterView(@NotNull ViewDto view) {
+        View threshold = View.valueOf(view.name());
+        List<View> greaterViews = Arrays.stream(View.values())
+                .filter(value -> value.ordinal() > threshold.ordinal()).toList();
+        Specification<Flat> specification = (root, query, builder) -> greaterViews.isEmpty()
+                ? builder.disjunction()
+                : root.get("view").in(greaterViews);
+        return flatRepository.findAll(specification, Sort.by("id"))
+                .stream().map(flatMapper::toDto).toList();
     }
 
     @Transactional
@@ -155,6 +207,15 @@ public class FlatService {
 
     private Flat findFlat(long id) {
         return flatRepository.findById(id).orElseThrow(() -> new FlatNotFoundException(id));
+    }
+
+    private void deleteFlat(Flat flat) {
+        Coordinates coordinates = flat.getCoordinates();
+        House house = flat.getHouse();
+        flatRepository.delete(flat);
+        flatRepository.flush();
+        coordinatesService.deleteCoordinates(coordinates);
+        deleteHouseIfUnused(house);
     }
 
     private void deleteHouseIfUnused(House house) {

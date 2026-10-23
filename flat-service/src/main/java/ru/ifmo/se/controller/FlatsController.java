@@ -28,8 +28,7 @@ public class FlatsController implements FlatsApi {
     @Override
     public ResponseEntity<CountResponseDto> countFlatsByHouse(@Valid String house, @Valid String houseName,
             @Min(1) @Max(148) @Valid Long houseYear, @Min(1) @Valid Integer houseNumberOfFlatsOnFloor) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'countFlatsByHouse'");
+        return ResponseEntity.ok(flatService.countFlatsByHouse(house, houseName, houseYear, houseNumberOfFlatsOnFloor));
     }
 
     @Override
@@ -54,8 +53,7 @@ public class FlatsController implements FlatsApi {
     @Override
     public ResponseEntity<FlatDto> deleteOneFlatByNumberOfRooms(
             @NotNull @Min(1) @Max(20) @Valid Integer numberOfRooms) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteOneFlatByNumberOfRooms'");
+        return ResponseEntity.ok(flatService.deleteOneFlatByNumberOfRooms(numberOfRooms));
     }
 
     @Override
@@ -65,13 +63,15 @@ public class FlatsController implements FlatsApi {
 
     @Override
     public ResponseEntity<List<FlatDto>> getFlatsWithGreaterView(ViewDto view) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlatsWithGreaterView'");
+        return ResponseEntity.ok(flatService.getFlatsWithGreaterView(view));
     }
 
     @Override
-    public ResponseEntity<List<FlatDto>> listFlats(@Size(min = 1) List<String> filter, @Size(min = 1) List<String> sort,
-            @Min(0) @Valid Integer page, @Min(1) @Valid Integer size) {
+    public ResponseEntity<List<FlatDto>> listFlats(
+            @Size(min = 1) List<String> filter,
+            @Size(min = 1) List<String> sort,
+            @Min(0) @Valid Integer page,
+            @Min(1) @Valid Integer size) {
         return ResponseEntity.ok(flatService.listFlats(filter, sort, page, size));
     }
 

@@ -72,8 +72,7 @@ public class FlatsController implements FlatsApi {
     @Override
     public ResponseEntity<List<FlatDto>> listFlats(@Size(min = 1) List<String> filter, @Size(min = 1) List<String> sort,
             @Min(0) @Valid Integer page, @Min(1) @Valid Integer size) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listFlats'");
+        return ResponseEntity.ok(flatService.listFlats(filter, sort, page, size));
     }
 
     @Override

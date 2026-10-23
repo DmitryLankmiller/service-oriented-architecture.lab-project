@@ -19,9 +19,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.ifmo.se.exception.FlatNotFoundException;
 import ru.ifmo.se.exception.MissingHouseException;
+import ru.ifmo.se.exception.InvalidQueryException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(InvalidQueryException.class)
+    public ResponseEntity<ErrorDto> invalidQuery(InvalidQueryException exception) {
+        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", exception.getMessage(), exception.getField());
+    }
+
     @ExceptionHandler(FlatNotFoundException.class)
     public ResponseEntity<ErrorDto> notFound(FlatNotFoundException exception) {
         return error(HttpStatus.NOT_FOUND, "FLAT_NOT_FOUND", exception.getMessage(), "id");

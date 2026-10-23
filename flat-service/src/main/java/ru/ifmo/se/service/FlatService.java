@@ -1,16 +1,21 @@
 package ru.ifmo.se.service;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.openapitools.model.FlatDto;
 import org.openapitools.model.FlatInputDto;
 import org.openapitools.model.FlatPatchDto;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.ifmo.se.exception.FlatNotFoundException;
+import ru.ifmo.se.exception.InvalidQueryException;
 import ru.ifmo.se.exception.MissingHouseException;
 import ru.ifmo.se.mapper.FlatMapper;
 import ru.ifmo.se.model.Coordinates;
@@ -19,6 +24,8 @@ import ru.ifmo.se.model.Furnish;
 import ru.ifmo.se.model.House;
 import ru.ifmo.se.model.Transport;
 import ru.ifmo.se.model.View;
+import ru.ifmo.se.query.FlatFilterBuilder;
+import ru.ifmo.se.query.FlatSortBuilder;
 import ru.ifmo.se.repository.FlatRepository;
 
 @Service
@@ -30,6 +37,8 @@ public class FlatService {
     private final CoordinatesService coordinatesService;
     private final HouseService houseService;
     private final FlatMapper flatMapper;
+    private final FlatFilterBuilder flatFilterBuilder;
+    private final FlatSortBuilder flatSortBuilder;
 
     @Transactional
     public FlatDto createFlat(@NotNull @Valid FlatInputDto dto) {
@@ -47,6 +56,22 @@ public class FlatService {
 
     public FlatDto getFlatById(@NotNull @Positive Long id) {
         return flatMapper.toDto(findFlat(id));
+    }
+
+    public List<FlatDto> listFlats(
+            @Size(min = 1) List<String> filters,
+            @Size(min = 1) List<String> sorting,
+            @Min(0) Integer page,
+            @Min(1) Integer size) {
+        int pageNumber = page == null ? 0 : page;
+        int pageSize = size == null ? 10 : size;
+        if ((long) pageNumber * pageSize > Integer.MAX_VALUE) {
+            throw new InvalidQueryException("page", "Смещение страницы слишком большое");
+        }
+        var specification = flatFilterBuilder.build(filters).and(flatSortBuilder.build(sorting));
+        // Порядок задаёт Criteria API: enum сортируются через CASE по порядку объявления.
+        return flatRepository.findAll(specification, PageRequest.of(pageNumber, pageSize))
+                .getContent().stream().map(flatMapper::toDto).toList();
     }
 
     @Transactional

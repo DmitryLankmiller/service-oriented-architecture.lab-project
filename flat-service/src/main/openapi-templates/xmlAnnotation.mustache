@@ -1,0 +1,7 @@
+{{! Keep XML names based on the schema name, independently of the Java model suffix. }}
+{{#withXml}}
+{{#jackson}}
+@JacksonXmlRootElement({{#xmlNamespace}}namespace = "{{.}}", {{/xmlNamespace}}localName = "{{xmlName}}{{^xmlName}}{{name}}{{/xmlName}}")
+{{/jackson}}
+@XmlRootElement({{#xmlNamespace}}namespace = "{{.}}", {{/xmlNamespace}}name = "{{xmlName}}{{^xmlName}}{{name}}{{/xmlName}}")
+@XmlAccessorType(XmlAccessType.FIELD){{/withXml}}

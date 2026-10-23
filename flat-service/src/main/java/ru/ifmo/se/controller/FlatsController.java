@@ -1,79 +1,89 @@
 package ru.ifmo.se.controller;
 
-import java.util.List;
-
-import org.openapitools.api.FlatsApi;
-import org.openapitools.model.CountResponse;
-import org.openapitools.model.Flat;
-import org.openapitools.model.FlatInput;
-import org.openapitools.model.FlatPatch;
-import org.openapitools.model.View;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.net.URI;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.openapitools.api.FlatsApi;
+import org.openapitools.model.CountResponseDto;
+import org.openapitools.model.FlatDto;
+import org.openapitools.model.FlatInputDto;
+import org.openapitools.model.FlatPatchDto;
+import org.openapitools.model.ViewDto;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import ru.ifmo.se.service.FlatService;
+
 @RestController
+@RequiredArgsConstructor
 public class FlatsController implements FlatsApi {
+    private final FlatService flatService;
 
     @Override
-    public ResponseEntity<CountResponse> countFlatsByHouse(@Valid String house, @Valid String houseName,
+    public ResponseEntity<CountResponseDto> countFlatsByHouse(@Valid String house, @Valid String houseName,
             @Min(1) @Max(148) @Valid Long houseYear, @Min(1) @Valid Integer houseNumberOfFlatsOnFloor) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'countFlatsByHouse'");
     }
 
     @Override
-    public ResponseEntity<Flat> createFlat(@Valid FlatInput flatInput) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createFlat'");
+    public ResponseEntity<FlatDto> createFlat(@Valid FlatInputDto flatInput) {
+        FlatDto flat = flatService.createFlat(flatInput);
+
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(flat.getId())
+                .toUri();
+        return ResponseEntity.created(uri)
+                .body(flat);
     }
 
     @Override
     public ResponseEntity<Void> deleteFlat(@Min(1) Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteFlat'");
+        flatService.deleteFlatById(id);
+        return ResponseEntity.noContent()
+                .build();
     }
 
     @Override
-    public ResponseEntity<Flat> deleteOneFlatByNumberOfRooms(@NotNull @Min(1) @Max(20) @Valid Integer numberOfRooms) {
+    public ResponseEntity<FlatDto> deleteOneFlatByNumberOfRooms(
+            @NotNull @Min(1) @Max(20) @Valid Integer numberOfRooms) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'deleteOneFlatByNumberOfRooms'");
     }
 
     @Override
-    public ResponseEntity<Flat> getFlat(@Min(1) Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlat'");
+    public ResponseEntity<FlatDto> getFlat(@Min(1) Long id) {
+        return ResponseEntity.ok(flatService.getFlatById(id));
     }
 
     @Override
-    public ResponseEntity<List<Flat>> getFlatsWithGreaterView(View view) {
+    public ResponseEntity<List<FlatDto>> getFlatsWithGreaterView(ViewDto view) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getFlatsWithGreaterView'");
     }
 
     @Override
-    public ResponseEntity<List<Flat>> listFlats(@Size(min = 1) List<String> filter, @Size(min = 1) List<String> sort,
+    public ResponseEntity<List<FlatDto>> listFlats(@Size(min = 1) List<String> filter, @Size(min = 1) List<String> sort,
             @Min(0) @Valid Integer page, @Min(1) @Valid Integer size) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'listFlats'");
     }
 
     @Override
-    public ResponseEntity<Flat> patchFlat(@Min(1) Long id, @Valid FlatPatch flatPatch) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'patchFlat'");
+    public ResponseEntity<FlatDto> patchFlat(@Min(1) Long id, @Valid FlatPatchDto flatPatch) {
+        return ResponseEntity.ok(flatService.updateFlatById(id, flatPatch));
     }
 
     @Override
-    public ResponseEntity<Flat> replaceFlat(@Min(1) Long id, @Valid FlatInput flatInput) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'replaceFlat'");
+    public ResponseEntity<FlatDto> replaceFlat(@Min(1) Long id, @Valid FlatInputDto flatInput) {
+        return ResponseEntity.ok(flatService.replaceFlatById(id, flatInput));
     }
 
 }

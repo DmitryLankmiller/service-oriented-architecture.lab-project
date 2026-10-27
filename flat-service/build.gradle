@@ -3,6 +3,7 @@ plugins {
     id("com.gradleup.shadow") version "8.3.9"
     id("io.micronaut.test-resources") version "4.6.2"
     id("io.micronaut.aot") version "4.6.2"
+    id("io.micronaut.openapi") version "4.6.2"
 }
 
 version = "0.1"
@@ -72,6 +73,15 @@ micronaut {
         deduceEnvironment = true
         optimizeNetty = true
         replaceLogbackXml = true
+    }
+    openapi {
+        server(file("src/main/resources/flat-service.yml")) {
+            apiPackageName = "ru.ifmo.se.api"
+            modelPackageName = "ru.ifmo.se.dto"
+            modelNameSuffix = "Dto"
+            useReactive = false
+            serializationFramework = "JACKSON"
+        }
     }
 
 }

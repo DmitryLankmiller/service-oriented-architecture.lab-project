@@ -1,6 +1,8 @@
 micronaut:
   application:
     name: flat-service
+  server:
+    context-path: /api
 
 datasources:
   default:

@@ -372,6 +372,9 @@ components:
   schemas:
     Error:
       type: object
+      xml:
+        name: error
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "error")'
       description: Единый формат ошибок для обоих сервисов.
       required: [status, code, message, timestamp]
       properties:
@@ -396,6 +399,9 @@ components:
 
     CountResponse:
       type: object
+      xml:
+        name: countResult
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "countResult")'
       required: [count]
       properties:
         count:
@@ -410,6 +416,9 @@ components:
 
     Flat:
       type: object
+      xml:
+        name: flat
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "flat")'
       description: Объект квартиры.
       required:
         - id
@@ -455,6 +464,9 @@ components:
           $ref: '#/components/schemas/House'
     FlatInput:
       type: object
+      xml:
+        name: flat
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "flat")'
       description: >-
         XML для создания или полной замены квартиры. id и дата создания не передаются.
         Отсутствующие необязательные поля имеют значение null.
@@ -486,6 +498,9 @@ components:
           $ref: '#/components/schemas/House'
     FlatPatch:
       type: object
+      xml:
+        name: flat
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "flat")'
       minProperties: 1
       maxProperties: 1
       additionalProperties: false
@@ -515,6 +530,9 @@ components:
           $ref: '#/components/schemas/HousePatch'
     CoordinatesPatch:
       type: object
+      xml:
+        name: coordinates
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "coordinates")'
       minProperties: 1
       maxProperties: 1
       additionalProperties: false
@@ -528,6 +546,9 @@ components:
           format: int32
     HousePatch:
       type: object
+      xml:
+        name: house
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "house")'
       minProperties: 1
       maxProperties: 1
       additionalProperties: false
@@ -545,6 +566,9 @@ components:
           minimum: 1
     Coordinates:
       type: object
+      xml:
+        name: coordinates
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "coordinates")'
       required:
         - x
         - y
@@ -558,6 +582,9 @@ components:
           format: int32
     House:
       type: object
+      xml:
+        name: house
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "house")'
       required:
         - year
         - numberOfFlatsOnFloor

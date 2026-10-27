@@ -81,6 +81,8 @@ micronaut {
             modelNameSuffix = "Dto"
             useReactive = false
             serializationFramework = "JACKSON"
+            // XML roots come from x-class-extra-annotation in the specification.
+            // withXml in generator 6.19.1 duplicates @JacksonXmlProperty annotations.
         }
     }
 

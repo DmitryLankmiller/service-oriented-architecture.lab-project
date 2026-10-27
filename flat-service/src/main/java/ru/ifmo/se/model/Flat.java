@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -40,7 +41,7 @@ public class Flat {
     @Check(constraints = "name <> ''")
     private String name; // Поле не может быть null, Строка не может быть пустой
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "coordinates_id", nullable = false)
     private Coordinates coordinates; // Поле не может быть null
 

@@ -57,7 +57,7 @@ public class Flat {
 
     @Column(name = "number_of_rooms", nullable = false)
     @Check(constraints = "number_of_rooms <= 20 AND number_of_rooms > 0")
-    private long numberOfRooms; // Максимальное значение поля: 20, Значение поля должно быть больше 0
+    private int numberOfRooms; // Максимальное значение поля: 20, Значение поля должно быть больше 0
 
     @Enumerated(value = EnumType.STRING)
     @Column(name = "furnish", nullable = true)

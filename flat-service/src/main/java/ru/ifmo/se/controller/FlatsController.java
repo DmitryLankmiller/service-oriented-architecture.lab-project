@@ -3,24 +3,37 @@ package ru.ifmo.se.controller;
 import ru.ifmo.se.api.FlatsApi;
 import ru.ifmo.se.dto.CountFlatsByHouseHouseParameterDto;
 import ru.ifmo.se.dto.CountResponseDto;
+import static ru.ifmo.se.dto.DtoMapper.toDto;
 import ru.ifmo.se.dto.FlatDto;
 import ru.ifmo.se.dto.FlatInputDto;
 import ru.ifmo.se.dto.FlatPatchDto;
 import ru.ifmo.se.dto.ViewDto;
+import ru.ifmo.se.model.Flat;
+import ru.ifmo.se.service.FlatService;
 
+import java.net.URI;
 import java.util.List;
 
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.context.ServerContextPathProvider;
+import io.micronaut.http.uri.UriBuilder;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.annotation.ExecuteOn;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.RequiredArgsConstructor;
 
 @Controller
+@ExecuteOn(TaskExecutors.BLOCKING)
+@RequiredArgsConstructor
 public class FlatsController implements FlatsApi {
+    private final FlatService service;
+    private final ServerContextPathProvider contextPathProvider;
 
     @Override
     public CountResponseDto countFlatsByHouse(@Nullable(inherited = true) CountFlatsByHouseHouseParameterDto house,
@@ -32,14 +45,23 @@ public class FlatsController implements FlatsApi {
 
     @Override
     public HttpResponse<@Valid FlatDto> createFlat(@NotNull @Valid FlatInputDto flatInputDto) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createFlat'");
+        Flat flat = service.createFlat(flatInputDto);
+
+        URI uri = UriBuilder.of("/")
+                .path(contextPathProvider.getContextPath())
+                .path("/flats")
+                .path(Long.toString(flat.getId()))
+                .build();
+
+        return HttpResponse.created(uri)
+                .body(toDto(flat));
     }
 
     @Override
     public HttpResponse<Void> deleteFlat(@NotNull @Min(1) Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteFlat'");
+        service.deleteFlatById(id);
+
+        return HttpResponse.noContent();
     }
 
     @Override
@@ -50,8 +72,9 @@ public class FlatsController implements FlatsApi {
 
     @Override
     public FlatDto getFlat(@NotNull @Min(1) Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlat'");
+        Flat flat = service.getFlatById(id);
+
+        return toDto(flat);
     }
 
     @Override
@@ -70,14 +93,16 @@ public class FlatsController implements FlatsApi {
 
     @Override
     public FlatDto patchFlat(@NotNull @Min(1) Long id, @NotNull @Valid FlatPatchDto flatPatchDto) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'patchFlat'");
+        Flat flat = service.updateFlatById(id, flatPatchDto);
+
+        return toDto(flat);
     }
 
     @Override
     public FlatDto replaceFlat(@NotNull @Min(1) Long id, @NotNull @Valid FlatInputDto flatInputDto) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'replaceFlat'");
+        Flat flat = service.replaceFlatById(id, flatInputDto);
+
+        return toDto(flat);
     }
 
 }

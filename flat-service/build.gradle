@@ -20,7 +20,7 @@ dependencies {
     annotationProcessor("io.micronaut:micronaut-http-validation")
     annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
     implementation("io.micronaut:micronaut-jackson-databind")
-    implementation("io.micronaut.data:micronaut-data-jdbc")
+    implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.validation:micronaut-validation")
     implementation("io.micronaut.xml:micronaut-jackson-xml")
@@ -74,11 +74,3 @@ micronaut {
     }
 
 }
-
-
-
-
-
-
-
-

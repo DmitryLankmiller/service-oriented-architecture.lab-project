@@ -1,6 +1,7 @@
 package ru.ifmo.se.model;
 
-import jakarta.persistence.CheckConstraint;
+import org.hibernate.annotations.Check;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,7 +28,8 @@ public class Coordinates {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "x", nullable = false, check = @CheckConstraint(constraint = "x > -288"))
+    @Column(name = "x", nullable = false)
+    @Check(constraints = "x > -288")
     private Float x; // Значение поля должно быть больше -288, Поле не может быть null
 
     @Column(name = "y", nullable = false)

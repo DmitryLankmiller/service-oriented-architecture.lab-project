@@ -6,9 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -36,7 +36,8 @@ public class Flat {
     private long id; // Значение поля должно быть больше 0, Значение этого поля должно быть
                      // уникальным, Значение этого поля должно генерироваться автоматически
 
-    @Column(name = "name", nullable = false, check = @CheckConstraint(constraint = "name <> ''"))
+    @Column(name = "name", nullable = false)
+    @Check(constraints = "name <> ''")
     private String name; // Поле не может быть null, Строка не может быть пустой
 
     @OneToOne
@@ -49,10 +50,12 @@ public class Flat {
     private java.time.LocalDate creationDate; // Поле не может быть null, Значение этого поля должно генерироваться
                                               // автоматически
 
-    @Column(name = "area", nullable = false, check = @CheckConstraint(constraint = "area > 0 AND area <= 724"))
+    @Column(name = "area", nullable = false)
+    @Check(constraints = "area > 0 AND area <= 724")
     private int area; // Максимальное значение поля: 724, Значение поля должно быть больше 0
 
-    @Column(name = "number_of_rooms", nullable = false, check = @CheckConstraint(constraint = "number_of_rooms <= 20 AND number_of_rooms > 0"))
+    @Column(name = "number_of_rooms", nullable = false)
+    @Check(constraints = "number_of_rooms <= 20 AND number_of_rooms > 0")
     private long numberOfRooms; // Максимальное значение поля: 20, Значение поля должно быть больше 0
 
     @Enumerated(value = EnumType.STRING)

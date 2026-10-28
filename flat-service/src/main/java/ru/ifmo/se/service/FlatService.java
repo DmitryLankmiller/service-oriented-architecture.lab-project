@@ -1,13 +1,22 @@
 package ru.ifmo.se.service;
 
+import java.util.List;
+
+import io.micronaut.data.model.Page;
+import io.micronaut.data.model.Pageable;
+import io.micronaut.data.repository.jpa.criteria.PredicateSpecification;
+import io.micronaut.data.repository.jpa.criteria.QuerySpecification;
 import io.micronaut.transaction.annotation.Transactional;
 import jakarta.inject.Singleton;
+import jakarta.persistence.criteria.Order;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import ru.ifmo.se.dto.FlatInputDto;
 import ru.ifmo.se.dto.FlatPatchDto;
+import ru.ifmo.se.exception.InvalidPaginationException;
 import ru.ifmo.se.exception.MissingHouseException;
 import ru.ifmo.se.exception.NoFlatToDeleteException;
 import ru.ifmo.se.exception.NoSuchFlatException;
@@ -17,6 +26,8 @@ import ru.ifmo.se.model.Furnish;
 import ru.ifmo.se.model.House;
 import ru.ifmo.se.model.Transport;
 import ru.ifmo.se.model.View;
+import ru.ifmo.se.query.FlatFilterBuilder;
+import ru.ifmo.se.query.FlatSortBuilder;
 import ru.ifmo.se.repository.FlatRepository;
 
 @Singleton
@@ -25,6 +36,8 @@ public class FlatService {
     private final FlatRepository repository;
     private final CoordinatesService coordinatesService;
     private final HouseService houseService;
+    private final FlatFilterBuilder filterBuilder;
+    private final FlatSortBuilder sortBuilder;
 
     @Transactional
     public Flat createFlat(@Valid @NotNull FlatInputDto dto) {
@@ -128,6 +141,49 @@ public class FlatService {
     public void deleteFlatById(@Positive long id) {
         Flat flat = repository.findById(id).orElseThrow(() -> new NoFlatToDeleteException());
         repository.delete(flat);
+    }
+
+    /*
+     * @Nullable(inherited = true) @Size(min = 1) List<@NotNull String> filter,
+     *
+     * @Nullable(inherited = true) @Size(min = 1) List<@NotNull String> sort,
+     *
+     * @Nullable(inherited = true) @Min(0) Integer page, @Nullable(inherited =
+     * true) @Min(1) Integer size
+     */
+    @Transactional
+    public List<Flat> getFlats(
+            List<@NotNull String> filterQueries,
+            List<@NotNull String> sortQueries,
+            @Min(0) Integer page,
+            @Min(1) Integer size) {
+
+        PredicateSpecification<Flat> filterSpec = filterBuilder.buildSpec(filterQueries);
+
+        QuerySpecification<Flat> spec = (root, query, cb) -> {
+            query.distinct(false);
+
+            if (query.getResultType() != Long.class) {
+                List<Order> orders = sortBuilder.buildOrder(sortQueries, root, cb);
+                query.orderBy(orders);
+            }
+
+            return filterSpec.toPredicate(root, cb);
+        };
+
+        page = page == null ? 0 : page;
+        size = size == null ? 10 : size;
+
+        long offest = (long) page * size;
+        if (offest > Integer.MAX_VALUE) {
+            throw new InvalidPaginationException("the offset is too big");
+        }
+
+        Pageable pageable = Pageable.from(page, size);
+
+        Page<Flat> flatsPage = repository.findAll(spec, pageable);
+
+        return flatsPage.getContent();
     }
 
 }

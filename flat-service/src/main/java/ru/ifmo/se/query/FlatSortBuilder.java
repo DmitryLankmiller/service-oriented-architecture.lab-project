@@ -8,6 +8,7 @@ import io.micronaut.data.model.Sort.Order.Direction;
 import jakarta.inject.Singleton;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
@@ -62,7 +63,9 @@ public class FlatSortBuilder {
     private <T> Path<T> buildPath(Root<Flat> root, SortField field) {
         String[] pathParts = field.getName().split("\\.");
 
-        Path<T> path = root.get(pathParts[0]);
+        Path<T> path = "house".equals(pathParts[0])
+                ? root.join("house", JoinType.LEFT)
+                : root.get(pathParts[0]);
 
         for (int i = 1; i < pathParts.length; i++) {
             path = path.get(pathParts[i]);

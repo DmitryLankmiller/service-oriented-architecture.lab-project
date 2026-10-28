@@ -3,6 +3,8 @@ package ru.ifmo.se.controller;
 import ru.ifmo.se.api.FlatsApi;
 import ru.ifmo.se.dto.CountFlatsByHouseHouseParameterDto;
 import ru.ifmo.se.dto.CountResponseDto;
+import ru.ifmo.se.dto.DtoMapper;
+
 import static ru.ifmo.se.dto.DtoMapper.toDto;
 import ru.ifmo.se.dto.FlatDto;
 import ru.ifmo.se.dto.FlatInputDto;
@@ -84,11 +86,14 @@ public class FlatsController implements FlatsApi {
     }
 
     @Override
-    public List<@Valid FlatDto> listFlats(@Nullable(inherited = true) @Size(min = 1) List<@NotNull String> filter,
+    public List<@Valid FlatDto> listFlats(@Nullable(inherited = true) List<@NotNull String> filter,
             @Nullable(inherited = true) @Size(min = 1) List<@NotNull String> sort,
             @Nullable(inherited = true) @Min(0) Integer page, @Nullable(inherited = true) @Min(1) Integer size) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listFlats'");
+        List<Flat> flatsPage = service.getFlats(filter, sort, page, size);
+
+        return flatsPage.stream()
+                .map(DtoMapper::toDto)
+                .toList();
     }
 
     @Override

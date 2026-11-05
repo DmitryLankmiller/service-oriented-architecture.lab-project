@@ -13,6 +13,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import ru.ifmo.se.api.AgencyApi;
+import ru.ifmo.se.client.flat.dto.FlatDto;
+import ru.ifmo.se.dto.AgencyDtoMapper;
 import ru.ifmo.se.dto.GetFlatsOrderedByTimeToMetro200ResponseInnerDto;
 import ru.ifmo.se.dto.GetFlatsOrderedByTimeToMetroModeParameterDto;
 import ru.ifmo.se.dto.GetFlatsOrderedByTimeToMetroOrderParameterDto;
@@ -30,8 +32,11 @@ public class AgencyController implements AgencyApi {
     public List<@Valid GetFlatsOrderedByTimeToMetro200ResponseInnerDto> getFlatsOrderedByTimeToMetro(
             @NotNull GetFlatsOrderedByTimeToMetroModeParameterDto mode,
             @NotNull GetFlatsOrderedByTimeToMetroOrderParameterDto order) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlatsOrderedByTimeToMetro'");
+        List<FlatDto> flats = service.listFlatsOrderedByTimeToMetro(mode, order);
+
+        return flats.stream()
+                .map(AgencyDtoMapper::toDto)
+                .toList();
     }
 
     @Override

@@ -92,6 +92,9 @@ components:
   schemas:
     TotalCostResponse:
       type: object
+      xml:
+        name: totalCostResult
+      x-class-extra-annotation: '@com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement(localName = "totalCostResult")'
       required: [totalCost]
       properties:
         totalCost:

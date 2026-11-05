@@ -84,6 +84,7 @@ micronaut {
             modelNameSuffix = "Dto"
             useReactive = false
             serializationFramework = "JACKSON"
+            alwaysUseGenerateHttpResponse = true
         }
     }
 

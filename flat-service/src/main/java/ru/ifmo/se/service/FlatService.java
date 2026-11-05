@@ -1,8 +1,11 @@
 package ru.ifmo.se.service;
 
+import static ru.ifmo.se.dto.CountFlatsByHouseHouseParameterDto.NULL;
+
 import java.util.Arrays;
 import java.util.List;
 
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.repository.jpa.criteria.PredicateSpecification;
@@ -16,8 +19,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import ru.ifmo.se.dto.CountFlatsByHouseHouseParameterDto;
 import ru.ifmo.se.dto.FlatInputDto;
 import ru.ifmo.se.dto.FlatPatchDto;
+import ru.ifmo.se.exception.BadHouseException;
 import ru.ifmo.se.exception.InvalidPaginationException;
 import ru.ifmo.se.exception.MissingHouseException;
 import ru.ifmo.se.exception.NoFlatToDeleteException;
@@ -197,6 +202,20 @@ public class FlatService {
         List<View> greaterViews = Arrays.asList(Arrays.copyOfRange(viewValues, view.ordinal() + 1, viewValues.length));
         List<Flat> flats = repository.findByViewInList(greaterViews);
         return flats;
+    }
+
+    @Transactional
+    public long countFlatsByProvidedHouse(@Nullable(inherited = true) CountFlatsByHouseHouseParameterDto house,
+            @Nullable(inherited = true) String houseName, @Nullable(inherited = true) @Min(1) @Max(148) Long houseYear,
+            @Nullable(inherited = true) @Min(1) Integer houseNumberOfFlatsOnFloor) {
+        if (house == NULL) {
+            return repository.countByHouseIdIsNull();
+        } else {
+            if (houseNumberOfFlatsOnFloor == null || houseYear == null) {
+                throw new BadHouseException();
+            }
+            return repository.countByHouse(houseName, houseYear, houseNumberOfFlatsOnFloor);
+        }
     }
 
 }

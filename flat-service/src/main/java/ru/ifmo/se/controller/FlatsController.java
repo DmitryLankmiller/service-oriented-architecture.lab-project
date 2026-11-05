@@ -43,9 +43,10 @@ public class FlatsController implements FlatsApi {
     public CountResponseDto countFlatsByHouse(@Nullable(inherited = true) CountFlatsByHouseHouseParameterDto house,
             @Nullable(inherited = true) String houseName, @Nullable(inherited = true) @Min(1) @Max(148) Long houseYear,
             @Nullable(inherited = true) @Min(1) Integer houseNumberOfFlatsOnFloor) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'countFlatsByHouse'");
-    }
+                long count = service.countFlatsByProvidedHouse(house, houseName, houseYear, houseNumberOfFlatsOnFloor);
+
+                return new CountResponseDto(count);
+            }
 
     @Override
     public HttpResponse<@Valid FlatDto> createFlat(@NotNull @Valid FlatInputDto flatInputDto) {

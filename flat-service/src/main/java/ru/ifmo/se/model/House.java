@@ -28,7 +28,7 @@ public class House {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "name", nullable = true)
+    @Column(name = "name", nullable = true, columnDefinition = "text")
     private String name; // Поле может быть null
 
     @Column(name = "year", nullable = false)

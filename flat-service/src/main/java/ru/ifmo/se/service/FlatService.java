@@ -10,6 +10,7 @@ import io.micronaut.transaction.annotation.Transactional;
 import jakarta.inject.Singleton;
 import jakarta.persistence.criteria.Order;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -143,14 +144,6 @@ public class FlatService {
         repository.delete(flat);
     }
 
-    /*
-     * @Nullable(inherited = true) @Size(min = 1) List<@NotNull String> filter,
-     *
-     * @Nullable(inherited = true) @Size(min = 1) List<@NotNull String> sort,
-     *
-     * @Nullable(inherited = true) @Min(0) Integer page, @Nullable(inherited =
-     * true) @Min(1) Integer size
-     */
     @Transactional
     public List<Flat> getFlats(
             List<@NotNull String> filterQueries,
@@ -184,6 +177,14 @@ public class FlatService {
         Page<Flat> flatsPage = repository.findAll(spec, pageable);
 
         return flatsPage.getContent();
+    }
+
+    @Transactional
+    public Flat deleteOneFlatByNumberOfRooms(@Min(1) @Max(20) int numberOfRooms) {
+        Flat flat = repository.findFirstByNumberOfRooms(numberOfRooms)
+                .orElseThrow(() -> new NoFlatToDeleteException());
+        repository.delete(flat);
+        return flat;
     }
 
 }

@@ -68,8 +68,9 @@ public class FlatsController implements FlatsApi {
 
     @Override
     public FlatDto deleteOneFlatByNumberOfRooms(@NotNull @Min(1) @Max(20) Integer numberOfRooms) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteOneFlatByNumberOfRooms'");
+        Flat flat = service.deleteOneFlatByNumberOfRooms(numberOfRooms);
+
+        return toDto(flat);
     }
 
     @Override

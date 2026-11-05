@@ -1,0 +1,99 @@
+openapi: 3.1.1
+info:
+  title: Agency API
+  version: 1.0.0
+  description: Дополнительные операции над квартирами с использованием Flat API.
+servers:
+  - url: https://api.server.test
+
+paths:
+  /agency/get-ordered-by-time-to-metro/{mode}/{order}:
+    get:
+      summary: Получить квартиры по времени пути до метро
+      description: >-
+        Вернуть список всех квартир, отсортированный по времени, которое
+        требуется, чтобы добраться от них до метро пешком (или на транспорте)
+        в порядке возрастания (или убывания)
+      operationId: getFlatsOrderedByTimeToMetro
+      tags: [Agency]
+      parameters:
+        - name: mode
+          in: path
+          required: true
+          description: Способ передвижения до метро.
+          schema:
+            type: string
+            enum: [by-transport, by-feet]
+        - name: order
+          in: path
+          required: true
+          description: asc - по возрастанию времени, desc - по убыванию.
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: Все квартиры в заданном порядке, включая пустой список.
+          content:
+            application/xml:
+              schema:
+                $ref: './flat-service.yml#/components/schemas/Flats'
+              example: '<flats><flat><id>1</id><name>Квартира</name><coordinates><x>0</x><y>0</y></coordinates><creationDate>2026-09-25</creationDate><area>50</area><numberOfRooms>2</numberOfRooms></flat></flats>'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /agency/get-total-cost:
+    get:
+      summary: Рассчитать суммарную стоимость квартир
+      description: >-
+        Рассчитать суммарную стоимость всех квартир, имеющихся в базе
+      operationId: getTotalCost
+      tags: [Agency]
+      responses:
+        '200':
+          description: Суммарная стоимость квартир.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TotalCostResponse'
+              example: '<totalCostResult><totalCost>1234567.89</totalCost></totalCostResult>'
+
+  /agency/flats/{id}:
+    get:
+      summary: Перейти к квартире в Flat API
+      description: Перенаправляет запрос на ресурс квартиры в первом сервисе.
+      operationId: redirectToFlat
+      tags: [Agency]
+      parameters:
+        - $ref: './flat-service.yml#/components/parameters/FlatId'
+      responses:
+        '307':
+          description: Временное перенаправление к квартире в Flat API.
+          headers:
+            Location:
+              description: Адрес квартиры в Flat API.
+              schema:
+                type: string
+                format: uri-reference
+              example: /flats/42
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  responses:
+    BadRequest:
+      description: Некорректный запрос.
+      content:
+        application/xml:
+          schema:
+            $ref: './flat-service.yml#/components/schemas/Error'
+          example: '<error><status>400</status><code>BAD_REQUEST</code><message>Invalid path parameter</message><timestamp>2026-09-25T12:00:00Z</timestamp></error>'
+
+  schemas:
+    TotalCostResponse:
+      type: object
+      required: [totalCost]
+      properties:
+        totalCost:
+          type: number
+          minimum: 0

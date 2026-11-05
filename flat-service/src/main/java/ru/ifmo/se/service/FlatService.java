@@ -1,5 +1,6 @@
 package ru.ifmo.se.service;
 
+import java.util.Arrays;
 import java.util.List;
 
 import io.micronaut.data.model.Page;
@@ -185,6 +186,17 @@ public class FlatService {
                 .orElseThrow(() -> new NoFlatToDeleteException());
         repository.delete(flat);
         return flat;
+    }
+
+    @Transactional
+    public List<Flat> getFlatsWhereViewGreaterThan(@NotNull View view) {
+        View[] viewValues = View.values();
+        if (view.ordinal() + 1 == viewValues.length) {
+            return List.of();
+        }
+        List<View> greaterViews = Arrays.asList(Arrays.copyOfRange(viewValues, view.ordinal() + 1, viewValues.length));
+        List<Flat> flats = repository.findByViewInList(greaterViews);
+        return flats;
     }
 
 }

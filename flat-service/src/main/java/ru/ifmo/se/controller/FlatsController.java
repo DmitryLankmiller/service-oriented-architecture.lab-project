@@ -6,6 +6,8 @@ import ru.ifmo.se.dto.CountResponseDto;
 import ru.ifmo.se.dto.DtoMapper;
 
 import static ru.ifmo.se.dto.DtoMapper.toDto;
+import static ru.ifmo.se.dto.DtoMapper.toEntity;
+
 import ru.ifmo.se.dto.FlatDto;
 import ru.ifmo.se.dto.FlatInputDto;
 import ru.ifmo.se.dto.FlatPatchDto;
@@ -82,8 +84,11 @@ public class FlatsController implements FlatsApi {
 
     @Override
     public List<@Valid FlatDto> getFlatsWithGreaterView(@NotNull ViewDto view) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlatsWithGreaterView'");
+        List<Flat> flats = service.getFlatsWhereViewGreaterThan(toEntity(view));
+
+        return flats.stream()
+                .map(DtoMapper::toDto)
+                .toList();
     }
 
     @Override

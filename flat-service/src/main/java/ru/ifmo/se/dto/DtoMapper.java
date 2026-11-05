@@ -3,6 +3,7 @@ package ru.ifmo.se.dto;
 import ru.ifmo.se.model.Coordinates;
 import ru.ifmo.se.model.Flat;
 import ru.ifmo.se.model.House;
+import ru.ifmo.se.model.View;
 
 public class DtoMapper {
     public static FlatDto toDto(Flat e) {
@@ -32,5 +33,9 @@ public class DtoMapper {
                 e.getNumberOfFlatsOnFloor())
                 .name(e.getName());
         return dto;
+    }
+
+    public static View toEntity(ViewDto dto) {
+        return View.valueOf(dto.getValue());
     }
 }

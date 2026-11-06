@@ -1,16 +1,25 @@
 <?php
 
 $publicPrefix = '/~s373305/soa/api/';
-$upstream = 'https://localhost:8444/flat-service/';
+$services = [
+    'flat' => [
+        'upstream' => 'https://localhost:8943/api/',
+        'cafile' => '/home/studs/s373305/SOA/certs/flat-service.crt',
+    ],
+    'agency' => [
+        'upstream' => 'https://localhost:8945/api/',
+        'cafile' => '/home/studs/s373305/SOA/certs/agency-service.crt',
+    ],
+];
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-if (!is_string($path) || !str_starts_with($path, $publicPrefix)) {
+if (!is_string($path) || ($path !== rtrim($publicPrefix, '/') && !str_starts_with($path, $publicPrefix))) {
     http_response_code(404);
     exit;
 }
 
-$resource = substr($path, strlen($publicPrefix));
+$resource = $path === rtrim($publicPrefix, '/') ? '' : substr($path, strlen($publicPrefix));
 
 $pathToCheck = $resource;
 do {
@@ -27,6 +36,12 @@ do {
     }
 } while ($pathToCheck !== $previousPath);
 
+// Match the entire path segment, so "agency-other" still goes to flat-service.
+$serviceName = $resource === 'agency' || str_starts_with($resource, 'agency/') ? 'agency' : 'flat';
+$service = $services[$serviceName];
+$upstream = $service['upstream'];
+
+// Keep the agency segment: its controller already exposes /api/agency/...
 $query = $_SERVER['QUERY_STRING'] ?? '';
 $url = $upstream . $resource . ($query !== '' ? '?' . $query : '');
 
@@ -55,7 +70,7 @@ $context = stream_context_create([
         'follow_location' => 0,
     ],
     'ssl' => [
-        'cafile' => '/home/studs/s373305/SOA/flat-service.crt',
+        'cafile' => $service['cafile'],
         'verify_peer' => true,
         'verify_peer_name' => true,
     ]
@@ -64,6 +79,7 @@ $context = stream_context_create([
 $responseBody = @file_get_contents($url, false, $context);
 
 if ($responseBody === false) {
+    error_log('HTTPS upstream unavailable: ' . $serviceName);
     http_response_code(502);
     header('Content-Type: text/plain; charset=utf-8');
     exit("Service unavailable\n");
@@ -79,9 +95,21 @@ foreach ($http_response_header ?? [] as $line) {
         $value = $matches[2];
 
         if (strtolower($name) === 'location') {
-            foreach ([$upstream, '/flat-service/'] as $internalPrefix) {
-                if (str_starts_with($value, $internalPrefix)) {
-                    $value = $publicPrefix . substr($value, strlen($internalPrefix));
+            // A redirect may point to either service. Never expose their local URLs.
+            $internalPrefixes = array_map(
+                fn ($target) => rtrim($target['upstream'], '/'),
+                $services
+            );
+            $internalPrefixes[] = '/api';
+
+            foreach ($internalPrefixes as $internalPrefix) {
+                if (
+                    $value === $internalPrefix
+                    || str_starts_with($value, $internalPrefix . '/')
+                    || str_starts_with($value, $internalPrefix . '?')
+                    || str_starts_with($value, $internalPrefix . '#')
+                ) {
+                    $value = rtrim($publicPrefix, '/') . substr($value, strlen($internalPrefix));
                     break;
                 }
             }

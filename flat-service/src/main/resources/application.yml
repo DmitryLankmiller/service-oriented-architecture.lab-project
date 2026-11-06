@@ -3,6 +3,15 @@ micronaut:
     name: flat-service
   server:
     context-path: /api
+    ssl:
+      enabled: true
+      port: ${HTTPS_PORT}
+      key-store:
+        path: ${TLS_KEYSTORE_PATH}
+        password: ${TLS_KEYSTORE_PASSWORD}
+        type: PKCS12
+      key:
+        alias: flat-service
 
 datasources:
   default:

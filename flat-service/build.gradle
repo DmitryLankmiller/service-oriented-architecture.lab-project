@@ -26,6 +26,7 @@ dependencies {
     implementation("io.micronaut.validation:micronaut-validation")
     implementation("io.micronaut.xml:micronaut-jackson-xml")
     implementation("jakarta.validation:jakarta.validation-api")
+    implementation("io.github.cdimascio:dotenv-java:3.2.0")
     compileOnly("io.micronaut:micronaut-http-client")
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("ch.qos.logback:logback-classic")

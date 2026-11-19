@@ -1,7 +1,6 @@
-import axios, {
-	type AxiosError,
-	type AxiosRequestConfig,
-} from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
+import { xmlTextError } from '../lib/forms';
+import { validateResponse } from './response-validation';
 
 const numericFields = new Set([
 	'id',
@@ -43,7 +42,7 @@ function readElement(element: Element): unknown {
 	if (numericFields.has(element.localName)) {
 		const value = Number(text);
 		if (!text.trim() || !Number.isFinite(value)) {
-			throw new Error(`Invalid numeric XML field: ${element.localName}`);
+			throw new Error('Сервер вернул некорректное числовое значение.');
 		}
 		return value;
 	}
@@ -54,14 +53,16 @@ function fromXml(text: string): unknown {
 	if (!text.trim()) return undefined;
 	const document = new DOMParser().parseFromString(text, 'application/xml');
 	if (document.querySelector('parsererror')) {
-		throw new Error('The API returned malformed XML');
+		throw new Error('Сервер вернул некорректный XML. Повторите запрос позже.');
 	}
 	const root = document.documentElement;
 	if (root.localName === 'flats') {
+		if (Array.from(root.children).some((child) => child.localName !== 'flat'))
+			throw new Error('Сервер вернул некорректный список квартир.');
 		return Array.from(root.children).map((flat) => readElement(flat));
 	}
 	if (!objectFields.has(root.localName)) {
-		throw new Error(`Unexpected XML response root: ${root.localName}`);
+		throw new Error('Сервер вернул ответ в неизвестном формате.');
 	}
 	return readElement(root);
 }
@@ -79,6 +80,8 @@ function toXml(data: unknown): string | undefined {
 				parent.appendChild(child);
 			}
 		} else {
+			const error = xmlTextError(String(value));
+			if (error) throw new Error(error);
 			parent.textContent = String(value);
 		}
 	}
@@ -93,6 +96,10 @@ function serializeParams(
 	const query = new URLSearchParams();
 	for (const [name, value] of Object.entries(params)) {
 		if (value === undefined || value === null) continue;
+		for (const item of Array.isArray(value) ? value : [value]) {
+			const error = xmlTextError(String(item));
+			if (error) throw new Error(error);
+		}
 		if (Array.isArray(value)) {
 			if (name === 'sort' && value.length > 0) {
 				query.append(name, value.join(','));
@@ -120,6 +127,7 @@ export async function xmlConverter<T>(
 	};
 	try {
 		const response = await axios.request<string>({
+			timeout: 15000,
 			baseURL: import.meta.env.VITE_API_BASE_URL || '/~s373305/soa/api',
 			...request,
 			headers,
@@ -128,7 +136,14 @@ export async function xmlConverter<T>(
 			transformResponse: [(data) => data],
 			paramsSerializer: { serialize: serializeParams },
 		});
-		return fromXml(response.data) as T;
+		const parsed = fromXml(response.data);
+		validateResponse(
+			parsed,
+			request.url ?? '',
+			request.method,
+			response.status,
+		);
+		return parsed as T;
 	} catch (error) {
 		if (axios.isAxiosError(error) && typeof error.response?.data === 'string') {
 			try {

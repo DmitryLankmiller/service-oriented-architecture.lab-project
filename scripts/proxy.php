@@ -3,11 +3,11 @@
 $publicPrefix = '/~s373305/soa/api/';
 $services = [
     'flat' => [
-        'upstream' => 'https://localhost:8943/api/',
+        'upstream' => 'https://localhost:18943/api/',
         'cafile' => '/home/studs/s373305/SOA/certs/flat-service.crt',
     ],
     'agency' => [
-        'upstream' => 'https://localhost:8945/api/',
+        'upstream' => 'https://localhost:18945/api/',
         'cafile' => '/home/studs/s373305/SOA/certs/agency-service.crt',
     ],
 ];

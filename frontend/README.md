@@ -1,75 +1,59 @@
-# React + TypeScript + Vite
+# Кварталы
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript. Запросы выполняются сгенерированными Orval-клиентами через Axios; XML преобразуется в `src/api/xml-converter.ts`.
 
-Currently, two official plugins are available:
+## Локальный запуск
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+По умолчанию Vite проксирует запросы `/~s373305/soa/api/...` на `https://se.ifmo.ru`. Локальные Java-приложения и SSH-туннель не нужны. Редиректы API сохраняются на локальном origin, поэтому переход agency → flat также работает в dev.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Для изменения адресов скопируйте `.env.example` в `.env.local`:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```properties
+VITE_API_BASE_URL=/~s373305/soa/api
+VITE_API_PROXY_TARGET=https://se.ifmo.ru
+VITE_APP_BASE=/~s373305/soa/app/
 ```
+
+`VITE_API_BASE_URL` — путь API на текущем origin, `VITE_API_PROXY_TARGET` — сервер для dev-прокси, `VITE_APP_BASE` — каталог публикации приложения. Переменные `VITE_*` доступны браузеру: секреты в них размещать нельзя. После изменения окружения перезапустите Vite.
+
+## Сборка и публикация
+
+```sh
+npm run build
+scp -r dist/* helios:~/public_html/soa/app/
+```
+
+Путь `/~s373305/soa/app/` для статических ресурсов уже задан в конфигурации production-сборки. Публикуется содержимое `dist`, включая каталог `assets`. Серверные `api/proxy.php` и `.htaccess` этой командой не удаляются.
+
+Локальная проверка production-сборки:
+
+```sh
+npm run preview
+```
+
+Откройте напечатанный Vite адрес с путём `/~s373305/soa/app/`.
+
+## Возможности
+
+- Таблица всех полей квартиры, карточка по ID, создание, полная замена, изменение одного поля и удаление с подтверждением.
+- Поиск по названию, сочетания фильтров и сортировок по всем доступным полям, изменение приоритета сортировок.
+- Постраничная загрузка с выбором размера, номера страницы и проверкой наличия следующей страницы. Нумерация в интерфейсе начинается с 1, в API — с 0.
+- Все специальные операции flat и agency, включая подсчёт квартир без дома и переход к квартире через agency.
+- Проверка обязательных полей, числовых диапазонов, дат и перечислений; отображение ошибок сервера.
+
+Отсутствующие необязательные значения при полном редактировании очищаются. Изменение одного поля не очищает значение — для этого используйте полное редактирование.
+
+## Генерация клиентов и проверки
+
+```sh
+npm run generate:api
+npm run build
+npm run lint
+```
+
+Сгенерированные файлы лежат в `src/api/flats-api.ts`, `src/api/agency-api.ts` и `src/api/models/`. Меняйте конфигурацию Orval или исходную спецификацию, а не сгенерированные файлы вручную.
